@@ -1,0 +1,137 @@
+.login-page-bg {
+  min-height: 100vh;
+  background: linear-gradient(120deg, #fbe8d3 0%, #f3e0c7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.login-motion-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  z-index: 2;
+}
+
+.login-paper {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2.5rem 2rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px 0 rgba(120, 72, 36, 0.10);
+  background: #fff;
+  border: 1px solid #e3e8ee;
+}
+
+.login-title {
+  font-weight: 700;
+  color: #5c4032;
+  letter-spacing: 0.5px;
+}
+
+.login-subtitle {
+  color: #7c5e48;
+  font-size: 1.1rem;
+}
+
+.login-segmented {
+  margin-bottom: 2rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.login-input input {
+  background: #f7f3ef;
+  border-radius: 0.5rem;
+  border: 1px solid #d2b48c;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: border 0.2s;
+}
+
+.login-input input:focus {
+  border: 1.5px solid #a0522d;
+  outline: none;
+}
+
+.login-btn {
+  background: linear-gradient(90deg, #a0522d 0%, #8b5c2a 100%);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(160, 82, 45, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.login-btn:hover {
+  background: linear-gradient(90deg, #8b5c2a 0%, #a0522d 100%);
+  box-shadow: 0 4px 16px rgba(160, 82, 45, 0.12);
+}
+
+.login-divider {
+  color: #bfa98a;
+  font-weight: 500;
+}
+
+.login-google-btn {
+  border-radius: 0.75rem;
+  font-weight: 600;
+  border: 1.5px solid #5c4032;
+  background: #fff;
+  color: #5c4032;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.login-google-btn:hover {
+  background: #f3ede4;
+  color: #a0522d;
+  border-color: #a0522d;
+  box-shadow: 0 2px 8px rgba(160, 82, 45, 0.08);
+}
+
+.login-forgot-text {
+  margin-bottom: 0.5rem;
+}
+
+.login-forgot-link {
+  color: #8b5c2a;
+  transition: color 0.2s;
+}
+
+.login-forgot-link:hover {
+  color: #a0522d;
+}
+
+.login-signup-text {
+  margin-top: 1.5rem;
+  color: #7c5e48;
+}
+
+.login-signup-link {
+  color: #8b5c2a;
+  transition: color 0.2s;
+}
+
+.login-signup-link:hover {
+  color: #a0522d;
+}
+
+@media (max-width: 600px) {
+  .login-paper {
+    max-width: 95vw;
+    padding: 1.5rem 0.5rem;
+  }
+  .login-title {
+    font-size: 1.5rem;
+  }
+  .login-subtitle {
+    font-size: 1rem;
+  }
+} 
