@@ -18,7 +18,8 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import "./LoginPage.css";
 
-const STRAPI_URL = "http://localhost:1337/api";
+// const STRAPI_URL = "http://localhost:1337/api";
+const STRAPI_URL = "https://habbit-forge-strapi-1.onrender.com/api";
 
 export default function SignupPage() {
   const navigate = useNavigate();
