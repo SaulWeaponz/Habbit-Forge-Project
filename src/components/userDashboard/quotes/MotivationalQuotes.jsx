@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Paper,
   Text,
@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import freshStartImg from '../../../assets/fresh-start.jpg';
+import { API_ENDPOINTS } from '../../../config/strapi';
 
 const MotivationalQuotes = () => {
   const [quotes, setQuote] = useState([]);
@@ -24,7 +25,7 @@ const MotivationalQuotes = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "http://localhost:1337/api/quotes?populate=*"
+        `${API_ENDPOINTS.QUOTES}?populate=*`
       );
       const data = await response.json();
       setQuote(data.data);

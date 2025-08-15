@@ -5,6 +5,7 @@ import {
 import { IconEdit, IconCheck, IconX, IconMail, IconUserCircle, IconCamera, IconInfoCircle } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { saveUserToStorage, getUserFromStorage } from '../../utils/localStorage';
+import { API_ENDPOINTS } from '../../config/strapi';
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -25,7 +26,7 @@ const UserProfile = () => {
       });
       setLoading(false);
       // Still fetch from backend to ensure latest data
-      fetch('http://localhost:1337/api/users?populate=profilePicture')
+      fetch(API_ENDPOINTS.USERS + '?populate=profilePicture')
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
@@ -36,11 +37,11 @@ const UserProfile = () => {
                 if (Array.isArray(matched.profilePicture) && matched.profilePicture[0]?.url) {
                   imageUrl = matched.profilePicture[0].url.startsWith('http')
                     ? matched.profilePicture[0].url
-                    : `http://localhost:1337${matched.profilePicture[0].url}`;
-                } else if (matched.profilePicture.url) {
-                  imageUrl = matched.profilePicture.url.startsWith('http')
-                    ? matched.profilePicture.url
-                    : `http://localhost:1337${matched.profilePicture.url}`;
+                                         : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${matched.profilePicture[0].url}`;
+                  } else if (matched.profilePicture.url) {
+                    imageUrl = matched.profilePicture.url.startsWith('http')
+                      ? matched.profilePicture.url
+                      : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${matched.profilePicture.url}`;
                 }
               }
               setUserInfo(matched);
@@ -77,15 +78,15 @@ const UserProfile = () => {
     const formDataUpload = new FormData();
     formDataUpload.append('files', file);
     try {
-      const response = await fetch('http://localhost:1337/api/upload', {
+      const response = await fetch(API_ENDPOINTS.UPLOAD, {
         method: 'POST',
         body: formDataUpload,
       });
       if (!response.ok) throw new Error('Image upload failed');
       const data = await response.json();
-      const imageUrl = data[0]?.url
-        ? (data[0].url.startsWith('http') ? data[0].url : `http://localhost:1337${data[0].url}`)
-        : '';
+              const imageUrl = data[0]?.url
+          ? (data[0].url.startsWith('http') ? data[0].url : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${data[0].url}`)
+          : '';
       const imageId = data[0]?.id;
       setFormData((prev) => ({ ...prev, profilePicture: imageUrl, profilePictureId: imageId }));
 
@@ -122,14 +123,14 @@ const UserProfile = () => {
       let response, updated = null;
       if (userInfo && userInfo.id) {
         // Always use /users/:id for update
-        response = await fetch(`http://localhost:1337/api/users/${userInfo.id}`, {
+        response = await fetch(`${API_ENDPOINTS.USERS}/${userInfo.id}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify(payload),
         });
         if (!response.ok && profilePictureId) {
           payload.profilePicture = [profilePictureId];
-          const retryRes = await fetch(`http://localhost:1337/api/users/${userInfo.id}`, {
+          const retryRes = await fetch(`${API_ENDPOINTS.USERS}/${userInfo.id}`, {
             method: 'PUT',
             headers,
             body: JSON.stringify(payload),
@@ -150,13 +151,13 @@ const UserProfile = () => {
         let imageUrl = '';
         if (updated.profilePicture) {
           if (Array.isArray(updated.profilePicture) && updated.profilePicture[0]?.url) {
-            imageUrl = updated.profilePicture[0].url.startsWith('http')
-              ? updated.profilePicture[0].url
-              : `http://localhost:1337${updated.profilePicture[0].url}`;
-          } else if (updated.profilePicture.url) {
-            imageUrl = updated.profilePicture.url.startsWith('http')
-              ? updated.profilePicture.url
-              : `http://localhost:1337${updated.profilePicture.url}`;
+                          imageUrl = updated.profilePicture[0].url.startsWith('http')
+                ? updated.profilePicture[0].url
+                : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${updated.profilePicture[0].url}`;
+            } else if (updated.profilePicture.url) {
+              imageUrl = updated.profilePicture.url.startsWith('http')
+                ? updated.profilePicture.url
+                : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${updated.profilePicture.url}`;
           }
         }
         saveUserToStorage({
@@ -178,13 +179,13 @@ const UserProfile = () => {
       let imageUrl = '';
       if (userInfo.profilePicture) {
         if (Array.isArray(userInfo.profilePicture) && userInfo.profilePicture[0]?.url) {
-          imageUrl = userInfo.profilePicture[0].url.startsWith('http')
-            ? userInfo.profilePicture[0].url
-            : `http://localhost:1337${userInfo.profilePicture[0].url}`;
-        } else if (userInfo.profilePicture.url) {
-          imageUrl = userInfo.profilePicture.url.startsWith('http')
-            ? userInfo.profilePicture.url
-            : `http://localhost:1337${userInfo.profilePicture.url}`;
+                      imageUrl = userInfo.profilePicture[0].url.startsWith('http')
+              ? userInfo.profilePicture[0].url
+              : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${userInfo.profilePicture[0].url}`;
+          } else if (userInfo.profilePicture.url) {
+            imageUrl = userInfo.profilePicture.url.startsWith('http')
+              ? userInfo.profilePicture.url
+              : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${userInfo.profilePicture.url}`;
         }
       }
       setFormData({

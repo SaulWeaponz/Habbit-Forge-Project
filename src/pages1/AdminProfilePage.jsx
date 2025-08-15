@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Title, Text, Avatar, Button, Group, TextInput, Stack, Paper, Box, Divider } from '@mantine/core';
 import { IconEdit, IconCheck, IconX, IconMail, IconUserCircle, IconCamera } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { API_ENDPOINTS } from '../config/strapi';
 
 function AdminProfilePage() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ function AdminProfilePage() {
       setLoading(false);
       return;
     }
-    fetch('http://localhost:1337/api/users?populate=profilePicture')
+    fetch(API_ENDPOINTS.USERS + '?populate=profilePicture')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -28,11 +29,11 @@ function AdminProfilePage() {
               if (Array.isArray(matched.profilePicture) && matched.profilePicture[0]?.url) {
                 imageUrl = matched.profilePicture[0].url.startsWith('http')
                   ? matched.profilePicture[0].url
-                  : `http://localhost:1337${matched.profilePicture[0].url}`;
+                  : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${matched.profilePicture[0].url}`;
               } else if (matched.profilePicture.url) {
                 imageUrl = matched.profilePicture.url.startsWith('http')
                   ? matched.profilePicture.url
-                  : `http://localhost:1337${matched.profilePicture.url}`;
+                  : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${matched.profilePicture.url}`;
               }
             }
             setAdminInfo(matched);
@@ -59,14 +60,14 @@ function AdminProfilePage() {
     const formDataUpload = new FormData();
     formDataUpload.append('files', file);
     try {
-      const response = await fetch('http://localhost:1337/api/upload', {
+      const response = await fetch(API_ENDPOINTS.UPLOAD, {
         method: 'POST',
         body: formDataUpload,
       });
       if (!response.ok) throw new Error('Image upload failed');
       const data = await response.json();
       const imageUrl = data[0]?.url
-        ? (data[0].url.startsWith('http') ? data[0].url : `http://localhost:1337${data[0].url}`)
+        ? (data[0].url.startsWith('http') ? data[0].url : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${data[0].url}`)
         : '';
       const imageId = data[0]?.id;
       setFormData((prev) => ({ ...prev, profilePicture: imageUrl, profilePictureId: imageId }));
@@ -79,7 +80,7 @@ function AdminProfilePage() {
   const handleUpdate = async () => {
     try {
       const profilePictureId = formData.profilePictureId;
-      const response = await fetch(`http://localhost:1337/api/users/${adminInfo.id}`, {
+      const response = await fetch(`${API_ENDPOINTS.USERS}/${adminInfo.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -105,11 +106,11 @@ function AdminProfilePage() {
         if (Array.isArray(adminInfo.profilePicture) && adminInfo.profilePicture[0]?.url) {
           imageUrl = adminInfo.profilePicture[0].url.startsWith('http')
             ? adminInfo.profilePicture[0].url
-            : `http://localhost:1337${adminInfo.profilePicture[0].url}`;
+            : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${adminInfo.profilePicture[0].url}`;
         } else if (adminInfo.profilePicture.url) {
           imageUrl = adminInfo.profilePicture.url.startsWith('http')
             ? adminInfo.profilePicture.url
-            : `http://localhost:1337${adminInfo.profilePicture.url}`;
+            : `${API_ENDPOINTS.USERS.replace('/api/users', '')}${adminInfo.profilePicture.url}`;
         }
       }
       setFormData({

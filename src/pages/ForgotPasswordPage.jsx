@@ -13,9 +13,9 @@ import { Link } from "react-router-dom";
 import { notifications } from "@mantine/notifications";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { API_ENDPOINTS } from '../config/strapi';
 
-// Your Strapi backend URL
-const STRAPI_URL = "http://localhost:1337/api";
+const STRAPI_URL = API_ENDPOINTS.AUTH;
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       // Send POST request to Strapi forgot-password endpoint
-      await axios.post(`${STRAPI_URL}/auth/forgot-password`, {
+      await axios.post(`${STRAPI_URL}/forgot-password`, {
         email: values.email,
       });
 

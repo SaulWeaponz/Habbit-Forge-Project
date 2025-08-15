@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, Stack, Title, Loader, Group, Anchor, Alert, Divider, Box, Image } from '@mantine/core';
 import { IconLink, IconAlertCircle } from '@tabler/icons-react';
 import quoteResourcesImg from '../../../assets/quote-resources.jpg';
+import { API_ENDPOINTS } from '../../../config/strapi';
 
-const STRAPI_RESOURCES_API_URL = 'http://localhost:1337/api/quote-resources';
+const STRAPI_RESOURCES_API_URL = API_ENDPOINTS.QUOTE_RESOURCES;
 
 const QuoteResources = () => {
   const [resources, setResources] = useState([]);

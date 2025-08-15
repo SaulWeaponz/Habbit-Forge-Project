@@ -31,10 +31,11 @@ import {
 } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 import { keyframes } from '@emotion/react';
+import { API_ENDPOINTS } from '../config/strapi';
 
 // Define your Strapi API URLs
-const STRAPI_TIPS_API_URL = 'http://localhost:1337/api/habit-tips';
-const STRAPI_RESOURCES_API_URL = 'http://localhost:1337/api/tip-resources';
+const STRAPI_TIPS_API_URL = API_ENDPOINTS.HABIT_TIPS;
+const STRAPI_RESOURCES_API_URL = API_ENDPOINTS.TIP_RESOURCES;
 
 // Animated background keyframes
 const animatedBackground = keyframes`

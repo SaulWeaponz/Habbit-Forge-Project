@@ -1,6 +1,7 @@
 import { Button, Textarea } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import { API_ENDPOINTS } from '../../../config/strapi';
 
 const FeedBackForm = ({habitId, fromUserId, toUserId,onFeedBackAdded}) => {
      const STRAPI_AUTH_TOKEN =
@@ -9,7 +10,7 @@ const FeedBackForm = ({habitId, fromUserId, toUserId,onFeedBackAdded}) => {
     const [text, setText]=useState('')
     const handleSubmit = async()=>{
         try{
-           const res = await fetch("http://localhost:1337/api/feedbacks",{
+           const res = await fetch(API_ENDPOINTS.FEEDBACKS,{
             method:'POST',
             headers:{
                 'Content-Type':'application/json',

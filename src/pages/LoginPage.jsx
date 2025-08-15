@@ -16,8 +16,9 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import "./LoginPage.css";
 import { saveUserToStorage } from '../utils/localStorage';
+import { API_ENDPOINTS } from '../config/strapi';
 
-const STRAPI_URL = "http://localhost:1337";
+const STRAPI_URL = API_ENDPOINTS.AUTH;
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${STRAPI_URL}/api/auth/local`,
+        `${STRAPI_URL}/local`,
         {
           identifier: form.email,
           password: form.password,
@@ -47,7 +48,7 @@ export default function LoginPage() {
         const user = response.data.user;
         // Fetch the full user with role
         const userWithRoleRes = await axios.get(
-          `${STRAPI_URL}/api/users/${user.id}?populate=role`
+          `${API_ENDPOINTS.USERS}/${user.id}?populate=role`
         );
         const userWithRole = userWithRoleRes.data;
         saveUserToStorage({
@@ -129,7 +130,7 @@ export default function LoginPage() {
                 type="submit"
                 fullWidth
                 loading={loading}
-                leftIcon={<IconLogin />}
+                leftSection={<IconLogin />}
                 mb="md"
                 className="login-btn"
                 size="md"

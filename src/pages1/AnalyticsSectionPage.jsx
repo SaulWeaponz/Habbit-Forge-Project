@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { keyframes } from '@emotion/react';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react'; // Added for useState and useEffect
+import { API_ENDPOINTS } from '../config/strapi';
 
 // Animated background keyframes
 const animatedBackground = keyframes`
@@ -19,10 +20,10 @@ function AnalyticsSectionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const HABITS_API = 'http://localhost:1337/api/habits';
-  const GOALS_API = 'http://localhost:1337/api/goals';
-  const USERS_API = 'http://localhost:1337/api/users';
   const AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
+  const HABITS_API = API_ENDPOINTS.HABITS;
+  const GOALS_API = API_ENDPOINTS.GOALS;
+  const USERS_API = API_ENDPOINTS.USERS;
 
   useEffect(() => {
     const fetchData = async () => {

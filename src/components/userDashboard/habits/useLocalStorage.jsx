@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
-const API_URL = "http://localhost:1337/api/habits";
+import { API_ENDPOINTS } from '../../../config/strapi';
 
 const useStrapiHabits = (token) => {
   const [list, setList] = useState([]);
@@ -16,7 +16,7 @@ const useStrapiHabits = (token) => {
   const addItem = async (item) => {
     console.log('addItem - item to send:', item);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(API_ENDPOINTS.HABITS, {
         method: "POST",
         headers,
         body: JSON.stringify({ data: item }),
@@ -45,7 +45,7 @@ const useStrapiHabits = (token) => {
       //partnerId:updatedData.partnerId
     };
     try {
-      await fetch(`${API_URL}/${id}`, {
+      await fetch(`${API_ENDPOINTS.HABITS}/${id}`, {
         method: "PUT",
         headers,
         body: JSON.stringify({ data: formateddata }),
@@ -58,10 +58,10 @@ const useStrapiHabits = (token) => {
 
   const removeItem = async (id) => {
     console.log("executed");
-    console.log(`${API_URL}/${id}`);
+    console.log(`${API_ENDPOINTS.HABITS}/${id}`);
     console.log(headers);
     try {
-      await fetch(`${API_URL}/${id}`, {
+      await fetch(`${API_ENDPOINTS.HABITS}/${id}`, {
         method: "DELETE",
         headers,
       });
@@ -73,7 +73,7 @@ const useStrapiHabits = (token) => {
   const toggleHabbitCompletion = async (habitId) => {
     try {
       //get currennt habbit
-      const res = await fetch(`http://localhost:1337/api/habits/${habitId}`);
+      const res = await fetch(`${API_ENDPOINTS.HABITS}/${habitId}`);
       const habit = await res.json();
       const existingDates = habit?.data?.attributes?.completedDates || [];
       // Get today's date
@@ -85,7 +85,7 @@ const useStrapiHabits = (token) => {
         ? existingDates.filter((date) => date !== today)
         : [...existingDates, today];
         console.log(updatedDates)
-      const response = await fetch(`http://localhost:1337/api/habits/${habitId}`, {
+      const response = await fetch(`${API_ENDPOINTS.HABITS}/${habitId}`, {
         method: "PUT",
         headers,
         body: JSON.stringify({
@@ -105,7 +105,7 @@ const useStrapiHabits = (token) => {
   const clearList = async () => {
     try {
       const deletePromises = list.map((habit) =>
-        fetch(`${API_URL}/${habit.id}`, {
+        fetch(`${API_ENDPOINTS.HABITS}/${habit.id}`, {
           method: "DELETE",
           headers,
         })
@@ -130,10 +130,10 @@ const useStrapiHabits = (token) => {
     setLoading(true);
     setError(null);
     try {
-      console.log('Attempting to fetch habits from:', API_URL);
+      console.log('Attempting to fetch habits from:', API_ENDPOINTS.HABITS);
       console.log('Using headers:', headers);
       
-      const res = await fetch(API_URL, { 
+      const res = await fetch(API_ENDPOINTS.HABITS, { 
         headers,
         method: 'GET',
         credentials: 'include' // Include credentials if using cookies

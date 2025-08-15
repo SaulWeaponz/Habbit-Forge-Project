@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, Stack, Title, Loader, Group, Anchor, Alert, Divider, Box, Image } from '@mantine/core';
 import { IconLink, IconAlertCircle } from '@tabler/icons-react';
 import motivationImg from '../../../assets/motivation.jpg';
+import { API_ENDPOINTS } from '../../../config/strapi';
 
-const STRAPI_TIP_RESOURCES_API_URL = 'http://localhost:1337/api/tip-resources';
+const STRAPI_TIP_RESOURCES_API_URL = API_ENDPOINTS.TIP_RESOURCES;
 
 const TipsResources = () => {
   const [resources, setResources] = useState([]);

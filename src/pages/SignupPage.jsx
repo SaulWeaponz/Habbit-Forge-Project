@@ -17,9 +17,10 @@ import { IconBrandGoogle, IconUserPlus } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import "./LoginPage.css";
+import { API_ENDPOINTS } from '../config/strapi';
 
-// const STRAPI_URL = "http://localhost:1337/api";
-const STRAPI_URL = "https://habbit-forge-strapi-1.onrender.com/api";
+// Use centralized configuration
+const STRAPI_URL = API_ENDPOINTS.AUTH.replace('/api/auth', '/api');
 
 export default function SignupPage() {
   const navigate = useNavigate();

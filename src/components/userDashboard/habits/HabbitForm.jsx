@@ -10,6 +10,7 @@ import {
   Autocomplete,
   Select,
 } from "@mantine/core";
+import { API_ENDPOINTS } from '../../../config/strapi';
 
 const HabbitForm = ({ initialValues = null, onSubmit, onClose, opened }) => {
   const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
@@ -18,7 +19,7 @@ const HabbitForm = ({ initialValues = null, onSubmit, onClose, opened }) => {
 
   // Fetch users
   useEffect(() => {
-    fetch("http://localhost:1337/api/users", {
+    fetch(API_ENDPOINTS.USERS, {
       headers: {
         Authorization: `Bearer ${STRAPI_AUTH_TOKEN}`,
       },

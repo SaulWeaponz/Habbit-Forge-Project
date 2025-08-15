@@ -29,9 +29,10 @@ import {
 } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 import { keyframes } from '@emotion/react';
+import { API_ENDPOINTS } from '../config/strapi';
 
 // Define your Strapi API URL for habit categories
-const STRAPI_CATEGORIES_API_URL = 'http://localhost:1337/api/habit-categories';
+const STRAPI_CATEGORIES_API_URL = API_ENDPOINTS.HABIT_CATEGORIES;
 
 // Animated background keyframes
 const animatedBackground = keyframes`

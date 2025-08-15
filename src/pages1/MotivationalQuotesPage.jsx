@@ -32,10 +32,11 @@ import {
 import { motion } from 'framer-motion';
 import { keyframes } from '@emotion/react';
 import QuoteResources from '../components/userDashboard/quotes/QuoteResources.jsx';
+import { API_ENDPOINTS } from '../config/strapi';
 
 // Define your Strapi API URLs
-const STRAPI_QUOTES_API_URL = 'http://localhost:1337/api/motivational-quotes';
-const STRAPI_RESOURCES_API_URL = 'http://localhost:1337/api/quote-resources';
+const STRAPI_QUOTES_API_URL = API_ENDPOINTS.MOTIVATIONAL_QUOTES;
+const STRAPI_RESOURCES_API_URL = API_ENDPOINTS.QUOTE_RESOURCES;
 
 // Animated background keyframes
 const animatedBackground = keyframes`

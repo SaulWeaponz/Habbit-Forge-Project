@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { createStaticHandler } from "react-router-dom";
+import { API_ENDPOINTS } from '../../../../config/strapi';
 
 const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN
 const useGoalsStorage=(authToken)=>{
     const [loading, setLoading] = useState(true)
     const [goals, setGoals] = useState([])
-    const AllGoals_Api = 'http://localhost:1337/api/goals?populate[associatedHabits][populate]=*'
-     const Goals_Api = 'http://localhost:1337/api/goals'
+    const AllGoals_Api = `${API_ENDPOINTS.GOALS}?populate[associatedHabits][populate]=*`
+     const Goals_Api = API_ENDPOINTS.GOALS
 
     const headers = {'Content-Type':'application/json',
         ...(authToken?{Authorization: `Bearer ${STRAPI_AUTH_TOKEN}`}:{})

@@ -3,6 +3,7 @@ import { Group, Text, Avatar, Button, rem, Menu, Loader } from '@mantine/core';
 import { IconLogout, IconSettings, IconUser } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '@mantine/hooks';
+import { API_ENDPOINTS } from '../config/strapi';
 
 function HeaderContent() {
   const [adminInfo, setAdminInfo] = useState(null);
@@ -35,7 +36,7 @@ function HeaderContent() {
 
         // If no stored user, try to fetch from Strapi API
         if (authToken) {
-          const response = await fetch('http://localhost:1337/api/users/me', {
+          const response = await fetch(API_ENDPOINTS.USERS_ME, {
             headers: {
               'Authorization': `Bearer ${authToken}`,
               'Content-Type': 'application/json'

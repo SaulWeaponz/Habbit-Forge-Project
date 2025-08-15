@@ -19,9 +19,10 @@ import { IconTrash } from "@tabler/icons-react";
 import { DatePickerInput } from "@mantine/dates";
 import "@mantine/dates/styles.css";
 import { useForm, isNotEmpty } from "@mantine/form";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import { useDisclosure } from "@mantine/hooks";
 import useStrapiHabits from "../habits/useLocalStorage";
+import { API_ENDPOINTS } from '../../../config/strapi';
 
 const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
 
@@ -48,7 +49,7 @@ const GoalForm = ({ opened, onClose, onSubmit, initialValues }) => {
   }, [habits]);
 
   useEffect(() => {
-    fetch("http://localhost:1337/api/users", {
+    fetch(API_ENDPOINTS.USERS, {
 
               headers: {
         Authorization: `Bearer ${STRAPI_AUTH_TOKEN}`,

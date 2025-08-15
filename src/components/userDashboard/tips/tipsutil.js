@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import { API_ENDPOINTS } from '../../../config/strapi';
 
 
 const useTip=()=>{
@@ -41,7 +42,7 @@ const useTip=()=>{
         setError('')
 
         try{
-            const res = await fetch("http://localhost:1337/api/habit-tips")
+            const res = await fetch(API_ENDPOINTS.HABIT_TIPS)
             if(!res.ok)throw new Error('Failed to fetch Tip')
             const data = await res.json()
             if(data.data && data.data.length > 0) {

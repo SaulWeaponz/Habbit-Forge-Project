@@ -1,9 +1,10 @@
-import {useState} from 'react'
+import React, { useState, useEffect } from 'react';
+import { API_ENDPOINTS } from '../../config/strapi';
 
 const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN
 export const getUsers =()=>{
      const [users, setUsers] = useState([]);
-    fetch("http://localhost:1337/api/users", {
+    fetch(API_ENDPOINTS.USERS, {
 
               headers: {
         Authorization: `Bearer ${STRAPI_AUTH_TOKEN}`,
