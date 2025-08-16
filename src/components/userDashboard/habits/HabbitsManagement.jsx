@@ -19,6 +19,7 @@ import { IconPlus, IconTrash } from '@tabler/icons-react';
 import HabbitForm from "./HabbitForm";
 import useStrapiHabits from "./useLocalStorage";
 import { HabbitsList } from "./HabbitsList.jsx";
+import { getAuthToken } from '../../../utils/auth';
 
 
 const HabbitsManagement = () => {
@@ -26,18 +27,32 @@ const HabbitsManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
 
   const [authToken, setAuthToken] = useState(() => {
-    // Get token from environment variable
-    const token = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
+    // Get token using the auth utility
+    const token = getAuthToken();
     if (!token) {
-      console.error('VITE_STRAPI_AUTH_TOKEN is not set in environment variables');
+      console.warn('No authentication token available for fetching habits');
       notifications.show({
-        title: 'Configuration Error',
-        message: 'Authentication token is missing. Please check your environment configuration.',
-        color: 'red'
+        title: 'Authentication Required',
+        message: 'Please log in to manage your habits.',
+        color: 'yellow'
       });
     }
     return token;
   });
+
+  // Update token when component mounts or user logs in
+  useEffect(() => {
+    const updateToken = () => {
+      const newToken = getAuthToken();
+      if (newToken && newToken !== authToken) {
+        setAuthToken(newToken);
+      }
+    };
+
+    // Check for token changes
+    const interval = setInterval(updateToken, 1000);
+    return () => clearInterval(interval);
+  }, [authToken]);
 
   const {
     list,

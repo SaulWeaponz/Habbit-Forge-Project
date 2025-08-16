@@ -25,11 +25,15 @@ const UserDashBoard = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
 
-  const handleLogout=()=>{
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('jwtToken')
+    localStorage.removeItem('isAuthenticated')
+    localStorage.removeItem('authMethod')
     navigate('/login')
   }
-  const navigate = useNavigate();
   const [opened, { toggle }] = useDisclosure(false);
   const [expandedItems, setExpandedItems] = useState(new Set());
 

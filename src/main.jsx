@@ -48,42 +48,15 @@ import TermsOfService from "./pages1/TermsOfService";
 import { useLocalStorage } from "@mantine/hooks";
 
 // Create a simple callback component to handle Auth0 redirects
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Loader, Center, Text } from "@mantine/core";
 
-// Callback component to handle Auth0 redirects
+// Simple callback component for future use
 function CallbackPage() {
-  const { handleRedirectCallback, isLoading, error } = useAuth0();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        await handleRedirectCallback();
-        navigate("/login"); // Redirect back to login to process the authentication
-      } catch (error) {
-        console.error("Callback error:", error);
-        navigate("/login");
-      }
-    };
-
-    handleCallback();
-  }, [handleRedirectCallback, navigate]);
-
-  if (error) {
-    return (
-      <Center style={{ height: '100vh' }}>
-        <Text color="red">Authentication error: {error.message}</Text>
-      </Center>
-    );
-  }
-
   return (
     <Center style={{ height: '100vh' }}>
       <div style={{ textAlign: 'center' }}>
         <Loader size="lg" color="teal" />
-        <Text mt="md" c="dimmed">Processing authentication...</Text>
+        <Text mt="md" c="dimmed">Processing...</Text>
       </div>
     </Center>
   );
@@ -128,15 +101,21 @@ function RoleBasedRoute({ allowedRoles, children }) {
   try {
     isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     user = JSON.parse(localStorage.getItem('currentUser'));
-  } catch (e) {}
+  } catch (e) {
+    console.error('🔐 Error checking auth:', e);
+  }
+  
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
+  
   const userRole = user.role?.name || user.role || '';
   const isAllowed = allowedRoles.includes(userRole);
+  
   if (isAllowed) {
     return children ? children : <Outlet />;
   }
+  
   // Redirect to correct dashboard
   if (userRole.toLowerCase().includes('admin')) {
     return <Navigate to="/admin" replace />;
@@ -176,7 +155,7 @@ function MainApp() {
             <Route path="terms-of-service" element={<TermsOfService />} />
           </Route>
           {/* Protect user-dashboard and admin routes with role-based logic */}
-          <Route element={<RoleBasedRoute allowedRoles={["Authenticated", "authenticated", "user", "User"]} />}>
+          <Route element={<RoleBasedRoute allowedRoles={["Authenticated", "authenticated", "user", "User", ""]} />}>
             <Route path="/user-dashboard/*" element={<UserDashBoard />}>
               <Route index element={<EnhancedOverview />} />
               <Route path="profile" element={<Profiles />} />

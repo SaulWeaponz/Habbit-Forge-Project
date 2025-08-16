@@ -164,14 +164,14 @@ const GoalForm = ({ opened, onClose, onSubmit, initialValues }) => {
           mt="sm"
           value={form.values.partnerSearch}
           onChange={(val) => form.setFieldValue("partnerSearch", val)}
-        onOptionSubmit={(val) => {
-            const selectedUser = users.find(
+          onOptionSubmit={(val) => {
+            const selectedUser = (Array.isArray(users) ? users : []).find(
               (u) => `${u.username} (${u.email})` === val
             );
             form.setFieldValue("partnerSearch", val);
             form.setFieldValue("accountabilityPartner", selectedUser?.id);
           }}
-          data={users?.map((u) => `${u.username} (${u.email})`)}
+          data={(Array.isArray(users) ? users : []).map((u) => `${u.username} (${u.email})`)}
         />
         <Button type="submit" mt={10}>
           Create Goal

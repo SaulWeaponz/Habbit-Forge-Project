@@ -28,6 +28,7 @@ import InteractiveGoalTracker from './utils/InteractiveGoalTracker';
 import GoalAnalytics from './utils/GoalAnalytics';
 import useStrapiHabits from '../habits/useLocalStorage';
 import dayjs from 'dayjs';
+import { getAuthToken } from '../../../utils/auth';
 
 
 const GoalsManagement = () => {
@@ -45,12 +46,12 @@ const GoalsManagement = () => {
     deleteSubgoals,
     toggleSubgoalCompletion,
     updateGoal
-  } = useGoalsStorge(import.meta.env.VITE_STRAPI_AUTH_TOKEN);
+  } = useGoalsStorge(getAuthToken());
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [viewGoal, setViewGoal] = useState(null);
-  const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
+  const STRAPI_AUTH_TOKEN = getAuthToken();
   const { list: habitsList } = useStrapiHabits(STRAPI_AUTH_TOKEN);
 
   if (loading) {
@@ -137,7 +138,7 @@ const GoalsManagement = () => {
         />
 
         <Stack spacing="lg">
-          {goals.data?.length === 0 ? (
+          {(Array.isArray(goals.data) ? goals.data : []).length === 0 ? (
             <Box
               style={{
                 textAlign: 'center',
@@ -156,7 +157,7 @@ const GoalsManagement = () => {
             </Box>
           ) : (
             <>
-              {goals.data?.map((goal) => {
+              {(Array.isArray(goals.data) ? goals.data : []).map((goal) => {
                 // Map associated habit IDs to titles
                 const associatedHabitTitles = (goal.associatedHabits || []).map(hid => {
                   const found = habitsList.find(h => h.documentId === String(hid) || h.id === hid);
@@ -224,7 +225,7 @@ const GoalsManagement = () => {
                   </Paper>
                 );
               })}
-              {goals.data?.length > 0 && (
+              {(Array.isArray(goals.data) ? goals.data : []).length > 0 && (
                 <Button
                   mt="xl"
                   color="red"

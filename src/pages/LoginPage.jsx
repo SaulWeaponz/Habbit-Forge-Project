@@ -59,7 +59,7 @@ export default function LoginPage() {
                 : userWithRole.profilePicture.url)
             : '',
           profilePicture: userWithRole.profilePicture,
-        });
+        }, response.data.jwt);
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("authMethod", "strapi");
         notifications.show({

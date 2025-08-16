@@ -158,7 +158,7 @@ const HabbitForm = ({ initialValues = null, onSubmit, onClose, opened }) => {
             form.setFieldValue("partnerSearch", val);
             form.setFieldValue("accountabilityPartner", selectedUser?.id);
           }}
-          data={users?.map((u) => `${u.username} (${u.email})`)}
+          data={(Array.isArray(users) ? users : []).map((u) => `${u.username} (${u.email})`)}
         />
 
         <Button fullWidth type="submit" mt="lg">

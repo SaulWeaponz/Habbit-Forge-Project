@@ -1,9 +1,12 @@
 
 
 // Save user data to localStorage under 'currentUser'
-export const saveUserToStorage = (user) => {
+export const saveUserToStorage = (user, jwtToken) => {
   try {
     localStorage.setItem('currentUser', JSON.stringify(user));
+    if (jwtToken) {
+      localStorage.setItem('jwtToken', jwtToken);
+    }
     // Optionally: console.log('User data saved to localStorage:', user);
   } catch (error) {
     console.error('Error saving user to localStorage:', error);
@@ -17,6 +20,16 @@ export const getUserFromStorage = () => {
     return userData ? JSON.parse(userData) : null;
   } catch (error) {
     console.error('Error reading user from localStorage:', error);
+    return null;
+  }
+};
+
+// Get JWT token from localStorage
+export const getJwtToken = () => {
+  try {
+    return localStorage.getItem('jwtToken');
+  } catch (error) {
+    console.error('Error reading JWT token from localStorage:', error);
     return null;
   }
 };
