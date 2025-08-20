@@ -7,28 +7,11 @@ import {
   TextInput,
   Textarea,
   Button,
-  Autocomplete,
   Select,
+  Text,
 } from "@mantine/core";
-import { API_ENDPOINTS } from '../../../config/strapi';
 
 const HabbitForm = ({ initialValues = null, onSubmit, onClose, opened }) => {
-  const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
-  const [users, setUsers] = useState([]);
-
-
-  // Fetch users
-  useEffect(() => {
-    fetch(API_ENDPOINTS.USERS, {
-      headers: {
-        Authorization: `Bearer ${STRAPI_AUTH_TOKEN}`,
-      },
-    })
-      .then((res) => res.json())
-      .then(setUsers)
-      .catch(console.error);
-  }, []);
-
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -37,8 +20,6 @@ const HabbitForm = ({ initialValues = null, onSubmit, onClose, opened }) => {
       frequency: "",
       startDate: "",
       endDate: "",
-      partnerSearch: "",
-      accountabilityPartner: '',
       ...initialValues,
     },
     validate: {
@@ -47,23 +28,20 @@ const HabbitForm = ({ initialValues = null, onSubmit, onClose, opened }) => {
       description: (value) =>
         value.length < 5 ? "Description must be at least 5 characters" : null,
       startDate: (value) => {
+        if (!value) return "Start date is required";
         const date = new Date(value);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        return date < today ? "Start date must be in the future" : null;
+        return date < today ? "Start date cannot be in the past" : null;
       },
       endDate: (value) => {
+        if (!value) return "End date is required";
         const start = new Date(form.values.startDate);
         const end = new Date(value); 
-        return end < start ? "End date must be after start date" : null;
-      },
-      frequency: (value) => (!value ? "Frequency is required" : null),
-      accountabilityPartner: (value, values) => {
-        if (!value && !values.partnerSearch) {
-          return "Please select an accountability partner";
-        }
+        if (end <= start) return "End date must be after start date";
         return null;
       },
+      frequency: (value) => (!value ? "Frequency is required" : null),
     },
   });
 
@@ -71,37 +49,56 @@ const HabbitForm = ({ initialValues = null, onSubmit, onClose, opened }) => {
     if (initialValues) {
       form.setValues({
         ...initialValues,
-        partnerSearch: "", //  prefill display string
       });
     }
   }, [initialValues]);
+
+  const clearForm = () => {
+    form.reset();
+  };
 
   const handleSubmit = async (values) => {
     const formatted = {
       ...values,      
       startDate: dayjs(values.startDate).format("YYYY-MM-DD"),
       endDate: dayjs(values.endDate).format("YYYY-MM-DD"),
-     
     };
-  
-    const {partnerSearch, id,...dataToSend } = formatted;
-  onSubmit(dataToSend)
-  form.reset()
- 
-};
+    
+    // Clean up the data before sending
+    const { id, ...dataToSend } = formatted;
+    
+    // Final validation - ensure no empty strings are sent for any field
+    Object.keys(dataToSend).forEach(key => {
+      if (dataToSend[key] === '' || dataToSend[key] === null || dataToSend[key] === undefined) {
+        delete dataToSend[key];
+      }
+    });
+    
+    // Validate that we have the required fields
+    if (!dataToSend.title || !dataToSend.description || !dataToSend.frequency || !dataToSend.startDate || !dataToSend.endDate) {
+      notifications.show({
+        title: 'Validation Error',
+        message: 'Please fill in all required fields.',
+        color: 'red',
+      });
+      return;
+    }
+    
+    onSubmit(dataToSend);
+    clearForm();
+  };
+
   return (
     <Modal
       opened={opened}
       onClose={() => {
-        form.reset();
+        clearForm();
         onClose();
         initialValues={}
       }}
-      
       title={initialValues ? "Update Habit" : "Add New Habit"}
       size="lg"
     >
-      
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
           label="Habit Title"
@@ -143,27 +140,10 @@ const HabbitForm = ({ initialValues = null, onSubmit, onClose, opened }) => {
           {...form.getInputProps("endDate")}
         />
 
-        <Autocomplete
-          label="Accountability Partner"
-          placeholder="Search by username or email"
-          searchable
-          nothingFound="No users found"
-          mt="sm"
-          value={form.values.partnerSearch}
-          onChange={(val) => form.setFieldValue("partnerSearch", val)}
-          onOptionSubmit={(val) => {
-            const selectedUser = users.find(
-              (u) => `${u.username} (${u.email})` === val
-            );
-            form.setFieldValue("partnerSearch", val);
-            form.setFieldValue("accountabilityPartner", selectedUser?.id);
-          }}
-          data={(Array.isArray(users) ? users : []).map((u) => `${u.username} (${u.email})`)}
-        />
-
         <Button fullWidth type="submit" mt="lg">
           {initialValues ? "Update Habit" : "Create Habit"}
         </Button>
+        
       </form>
     </Modal>
   );

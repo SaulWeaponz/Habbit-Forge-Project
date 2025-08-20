@@ -21,14 +21,11 @@ import "@mantine/dates/styles.css";
 import { useForm, isNotEmpty } from "@mantine/form";
 import React, { useState, useEffect } from 'react';
 import { useDisclosure } from "@mantine/hooks";
-import useStrapiHabits from "../habits/useLocalStorage";
 import { API_ENDPOINTS } from '../../../config/strapi';
 
 const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
 
-const GoalForm = ({ opened, onClose, onSubmit, initialValues }) => {
-  const [users, setUsers] = useState([]);
-  const { list: habits = [], loading: habitsLoading } = useStrapiHabits(STRAPI_AUTH_TOKEN);
+const GoalForm = ({ opened, onClose, onSubmit, initialValues, habits = [], habitsLoading = false, users = [], usersLoading = false }) => {
   const [habitOptions, setHabitOptions] = useState([]);
   
   // Process habits into options when they load
@@ -47,17 +44,6 @@ const GoalForm = ({ opened, onClose, onSubmit, initialValues }) => {
       setHabitOptions([]);
     }
   }, [habits]);
-
-  useEffect(() => {
-    fetch(API_ENDPOINTS.USERS, {
-
-              headers: {
-        Authorization: `Bearer ${STRAPI_AUTH_TOKEN}`,
-      },
-    })
-      .then((res) => res.json())
-      .then(setUsers)
-      .catch(console.error);},[])
 
   // Compute initial form values for editing
   const computeInitialValues = () => {
@@ -158,9 +144,9 @@ const GoalForm = ({ opened, onClose, onSubmit, initialValues }) => {
         />
         <Autocomplete
           label="Accountability Partner"
-          placeholder="Search by username or email"
+          placeholder={usersLoading ? "Loading users..." : "Search by username or email"}
           searchable
-          nothingFound="No users found"
+          nothingFound={usersLoading ? "Loading..." : "No users found"}
           mt="sm"
           value={form.values.partnerSearch}
           onChange={(val) => form.setFieldValue("partnerSearch", val)}
@@ -172,6 +158,7 @@ const GoalForm = ({ opened, onClose, onSubmit, initialValues }) => {
             form.setFieldValue("accountabilityPartner", selectedUser?.id);
           }}
           data={(Array.isArray(users) ? users : []).map((u) => `${u.username} (${u.email})`)}
+          disabled={usersLoading}
         />
         <Button type="submit" mt={10}>
           Create Goal

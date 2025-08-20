@@ -14,77 +14,115 @@ const useStrapiHabits = (token) => {
 
   // Add habit
   const addItem = async (item) => {
-    console.log('addItem - item to send:', item);
+    const cleanedItem = { ...item };
+    
+    // Remove any undefined or null values that might cause issues
+    Object.keys(cleanedItem).forEach(key => {
+      if (cleanedItem[key] === undefined) {
+        delete cleanedItem[key];
+      }
+    });
+    
     try {
+      const requestBody = { data: cleanedItem };
+      
       const response = await fetch(API_ENDPOINTS.HABITS, {
         method: "POST",
         headers,
-        body: JSON.stringify({ data: item }),
+        body: JSON.stringify(requestBody),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.error?.message || `Failed to create habit: ${response.status}`);
+      }
+      
       const responseData = await response.json();
-      console.log('addItem - response from backend:', responseData);
+      
+      // Refresh the habits list
       await fetchHabits();
+      
+      return responseData;
     } catch (error) {
-      console.error("Error adding habit", error);
+      throw error;
     }
   };
 
   // Update habit
   const updateItem = async (id, updatedData) => {
-    console.log(typeof id);
-
-    const formateddata = {
+    const formattedData = {
       title: updatedData.title,
       description: updatedData.description,
       frequency: updatedData.frequency,
       startDate: updatedData.startDate,
       endDate: updatedData.endDate,
-
       completedDates: updatedData.completedDates || [],
-
-      //partnerId:updatedData.partnerId
     };
+    
+    // Remove any undefined values
+    Object.keys(formattedData).forEach(key => {
+      if (formattedData[key] === undefined) {
+        delete formattedData[key];
+      }
+    });
+    
     try {
-      await fetch(`${API_ENDPOINTS.HABITS}/${id}`, {
+      const response = await fetch(`${API_ENDPOINTS.HABITS}/${id}`, {
         method: "PUT",
         headers,
-        body: JSON.stringify({ data: formateddata }),
+        body: JSON.stringify({ data: formattedData }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.error?.message || `Failed to update habit: ${response.status}`);
+      }
+      
       await fetchHabits();
     } catch (error) {
-      console.error("Error updating habit", error);
+      throw error;
     }
   };
 
   const removeItem = async (id) => {
-    console.log("executed");
-    console.log(`${API_ENDPOINTS.HABITS}/${id}`);
-    console.log(headers);
     try {
-      await fetch(`${API_ENDPOINTS.HABITS}/${id}`, {
+      const response = await fetch(`${API_ENDPOINTS.HABITS}/${id}`, {
         method: "DELETE",
         headers,
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.error?.message || `Failed to delete habit: ${response.status}`);
+      }
+      
       await fetchHabits();
     } catch (error) {
-      console.error("Error deleting habit", error);
+      throw error;
     }
   };
+
   const toggleHabbitCompletion = async (habitId) => {
     try {
-      //get currennt habbit
-      const res = await fetch(`${API_ENDPOINTS.HABITS}/${habitId}`);
+      // Get current habit
+      const res = await fetch(`${API_ENDPOINTS.HABITS}/${habitId}`, { headers });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch habit: ${res.status}`);
+      }
+      
       const habit = await res.json();
       const existingDates = habit?.data?.attributes?.completedDates || [];
+      
       // Get today's date
       const today = dayjs().format("YYYY-MM-DD");
+      
       // Prevent duplicates
       const isCompletedToday = existingDates.includes(today);
 
       const updatedDates = isCompletedToday
         ? existingDates.filter((date) => date !== today)
         : [...existingDates, today];
-        console.log(updatedDates)
+        
       const response = await fetch(`${API_ENDPOINTS.HABITS}/${habitId}`, {
         method: "PUT",
         headers,
@@ -94,14 +132,18 @@ const useStrapiHabits = (token) => {
           },
         }),
       });
-      if(!response.ok){
-        console.log(response.error)
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.error?.message || `Failed to update habit completion: ${response.status}`);
       }
+      
       await fetchHabits();
     } catch (error) {
-      console.error("Error updating progress", error);
+      throw error;
     }
   };
+
   const clearList = async () => {
     try {
       const deletePromises = list.map((habit) =>
@@ -113,15 +155,14 @@ const useStrapiHabits = (token) => {
       await Promise.all(deletePromises);
       await fetchHabits();
     } catch (error) {
-      console.error("Error clearing habits", error);
+      throw error;
     }
   };
 
   // Fetch habits
   const fetchHabits = useCallback(async () => {
     if (!token) {
-      console.warn('No token available for fetching habits');
-      setError('Authentication required');
+      setError('Authentication required. Please log in again.');
       setList([]);
       setLoading(false);
       return;
@@ -129,24 +170,22 @@ const useStrapiHabits = (token) => {
 
     setLoading(true);
     setError(null);
+    
     try {
-      console.log('Attempting to fetch habits from:', API_ENDPOINTS.HABITS);
-      console.log('Using headers:', headers);
-      
       const res = await fetch(API_ENDPOINTS.HABITS, { 
         headers,
         method: 'GET',
-        credentials: 'include' // Include credentials if using cookies
       });
       
       if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('Authentication failed. Please log in again.');
+        }
         const errorText = await res.text();
-        console.error('Server response:', errorText);
         throw new Error(`Server error (${res.status}): ${errorText}`);
       }
       
       const data = await res.json();
-      console.log('fetchHabits - data received from backend:', data);
 
       if (!data || !data.data) {
         throw new Error('Invalid API response structure');
@@ -154,7 +193,6 @@ const useStrapiHabits = (token) => {
 
       // Transform the data to include both ID and attributes at the top level
       const transformedData = data.data.map(item => {
-        console.log('Raw habit item:', item);
         // Use attributes if present, otherwise fallback to item itself
         const attributes = item.attributes || item;
         const transformed = {
@@ -168,7 +206,6 @@ const useStrapiHabits = (token) => {
           completedDates: attributes.completedDates || [],
           ...attributes // Include any other attributes
         };
-        console.log('Transformed habit item:', transformed);
         return transformed;
       });
 
@@ -176,7 +213,6 @@ const useStrapiHabits = (token) => {
       setError(null);
 
     } catch (error) {
-      console.error("Error fetching habits:", error);
       setError(error.message);
       setList([]);
     } finally {
@@ -196,7 +232,8 @@ const useStrapiHabits = (token) => {
     updateItem,
     removeItem,
     clearList,
-    toggleHabbitCompletion
+    toggleHabbitCompletion,
+    refreshHabits: fetchHabits, // Expose refresh function
   };
 };
 

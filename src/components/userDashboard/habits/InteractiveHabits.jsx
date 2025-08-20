@@ -17,42 +17,49 @@ import {
   Progress,
   ActionIcon,
   Button,
+  Alert,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconCalendar, IconCheck, IconX, IconChartBar, IconTrophy, IconBolt } from '@tabler/icons-react';
+import { IconCalendar, IconCheck, IconX, IconChartBar, IconTrophy, IconBolt, IconAlertCircle, IconRefresh } from '@tabler/icons-react';
 import useStrapiHabits from './useLocalStorage';
 import gamificationService from './utils/GamificationService';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import { LineChart } from '@mantine/charts';
+import { getAuthToken } from '../../../utils/auth';
 
 dayjs.extend(isBetween);
 
 const InteractiveHabits = () => {
-  const authToken = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
+  const [authToken, setAuthToken] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedHabit, setSelectedHabit] = useState(null);
   const {
     list,
     loading,
+    error,
     updateItem,
+    refreshHabits,
   } = useStrapiHabits(authToken);
+
+  // Get auth token on component mount
+  useEffect(() => {
+    const token = getAuthToken();
+    setAuthToken(token);
+  }, []);
+
+  // Refresh habits when auth token changes
+  useEffect(() => {
+    if (authToken && refreshHabits) {
+      refreshHabits();
+    }
+  }, [authToken, refreshHabits]);
 
   // Enhanced completion tracking with gamification
   const handleDateToggle = async (habit, date) => {
-    // Ensure we're working with the local timezone
     const localDate = dayjs(date).startOf('day');
     const dateStr = localDate.format('YYYY-MM-DD');
     const completionTime = new Date();
-    
-    console.log('Toggling date:', {
-      clickedDate: date.format('YYYY-MM-DD HH:mm:ss'),
-      localDate: localDate.format('YYYY-MM-DD HH:mm:ss'),
-      dateStr,
-      habitStartDate: habit.startDate,
-      habitEndDate: habit.endDate,
-      currentCompletedDates: habit.completedDates
-    });
 
     const completedDates = habit.completedDates || [];
     const isCompleted = completedDates.includes(dateStr);
@@ -61,31 +68,19 @@ const InteractiveHabits = () => {
       ...habit,
       completedDates: isCompleted
         ? completedDates.filter(d => d !== dateStr)
-        : [...completedDates, dateStr].sort() // Sort dates for consistency
+        : [...completedDates, dateStr].sort()
     };
-    
-    console.log('Updated habit:', {
-      newCompletedDates: updatedHabit.completedDates,
-      added: !isCompleted,
-      removed: isCompleted
-    });
 
     try {
       await updateItem(habit.documentId, updatedHabit);
       
-      // Track completion for gamification using the service
       if (!isCompleted) {
         gamificationService.trackHabitCompletion(habit, completionTime);
-      } else {
-        // Handle uncompletion (optional - could track this too)
-        console.log('Habit uncompleted:', habit.title);
       }
       
-      // Update the selected habit to reflect changes immediately
       setSelectedHabit(updatedHabit);
       
     } catch (error) {
-      console.error('Error updating habit:', error);
       notifications.show({
         title: 'Error',
         message: 'Failed to update habit completion. Please try again.',
@@ -93,8 +88,6 @@ const InteractiveHabits = () => {
       });
     }
   };
-
-
 
   // Calculate current streak across all habits using the service
   const calculateCurrentStreak = () => {
@@ -136,45 +129,22 @@ const InteractiveHabits = () => {
   const buildChartData = (habit) => {
     if (!habit) return [];
     
-    console.log('Building chart data for habit:', {
-      title: habit.title,
-      startDate: habit.startDate,
-      endDate: habit.endDate,
-      completedDates: habit.completedDates
-    });
-    
-    // Ensure we have valid dates and they're in local timezone
     const startDate = dayjs(habit.startDate).startOf('day');
     const endDate = dayjs(habit.endDate).startOf('day');
     const today = dayjs().startOf('day');
 
-    console.log('Parsed dates:', {
-      startDate: startDate.format('YYYY-MM-DD HH:mm:ss'),
-      endDate: endDate.format('YYYY-MM-DD HH:mm:ss'),
-      today: today.format('YYYY-MM-DD HH:mm:ss')
-    });
-
-    // Validate date range
     if (!startDate.isValid() || !endDate.isValid()) {
-      console.error('Invalid date range for habit:', habit.title);
       return [];
     }
 
-    // Sort and normalize completed dates for consistent lookup
     const normalizedCompletedDates = (habit.completedDates || []).map(date => 
       dayjs(date).startOf('day').format('YYYY-MM-DD')
     );
     const completedDatesSet = new Set(normalizedCompletedDates);
-    
-    console.log('Normalized completed dates:', {
-      original: habit.completedDates,
-      normalized: normalizedCompletedDates
-    });
 
     const data = [];
     let currentDate = startDate;
 
-    // Build data points for each day in the range
     while (currentDate.isBefore(endDate) || currentDate.isSame(endDate, 'day')) {
       const dateStr = currentDate.format('YYYY-MM-DD');
       const isCompleted = completedDatesSet.has(dateStr);
@@ -188,13 +158,6 @@ const InteractiveHabits = () => {
       });
       currentDate = currentDate.add(1, 'day');
     }
-
-    console.log('Generated chart data:', {
-      dataPoints: data.length,
-      completedPoints: data.filter(d => d.completed).length,
-      firstPoint: data[0],
-      lastPoint: data[data.length - 1]
-    });
 
     return data;
   };
@@ -214,15 +177,71 @@ const InteractiveHabits = () => {
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  if (loading) {
+  if (loading || !authToken) {
     return (
       <Container size="lg">
         <Center style={{ height: '50vh' }}>
           <Stack align="center" spacing="md">
             <Loader size="lg" color="orange" />
-            <Text size="lg" color="#666">Loading your habits...</Text>
+            <Text size="lg" color="#666">
+              {!authToken ? 'Checking authentication...' : 'Loading your habits...'}
+            </Text>
+            {!authToken && (
+              <Text size="sm" color="dimmed">
+                This may take a moment...
+              </Text>
+            )}
           </Stack>
         </Center>
+      </Container>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Container size="lg">
+        <Paper
+          shadow="xl"
+          radius="lg"
+          p="xl"
+          style={{
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(8px)',
+            border: '1.5px solid #ffe0b2',
+            boxShadow: '0 4px 32px 0 rgba(255,146,43,0.10)',
+          }}
+        >
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Error Loading Habits"
+            color="red"
+            mb="md"
+          >
+            {error}
+          </Alert>
+          
+          <Stack align="center" spacing="md">
+            <Text size="lg" color="#666">
+              There was an error loading your habits. This could be due to:
+            </Text>
+            <Text size="sm" color="#666" ta="center">
+              • Authentication issues - please log in again<br/>
+              • Network connectivity problems<br/>
+              • Backend service issues
+            </Text>
+            
+            <Button
+              variant="filled"
+              color="blue"
+              onClick={refreshHabits}
+              leftSection={<IconBolt size={16} />}
+              disabled={!refreshHabits}
+            >
+              Try Again
+            </Button>
+          </Stack>
+        </Paper>
       </Container>
     );
   }
@@ -246,6 +265,35 @@ const InteractiveHabits = () => {
         <Text size="lg" color="#666" mb="xl">
           Select a habit to view and track your progress
         </Text>
+
+        {/* Header Actions */}
+        <Group position="apart" mb="md">
+          <div></div>
+          <Button
+            variant="light"
+            color="orange"
+            onClick={refreshHabits}
+            leftSection={<IconRefresh size={16} />}
+            loading={loading}
+            disabled={!refreshHabits}
+          >
+            Refresh Habits
+          </Button>
+        </Group>
+
+        {/* Authentication Status */}
+        {!authToken && (
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            title="Authentication Required"
+            color="red"
+            mb="md"
+          >
+            <Text size="sm">
+              You need to be logged in to view and track habits. Please log in and try again.
+            </Text>
+          </Alert>
+        )}
 
         {/* Overall Stats Summary */}
         {list?.length > 0 && (
@@ -292,11 +340,25 @@ const InteractiveHabits = () => {
           <Center style={{ padding: '4rem 2rem' }}>
             <Stack align="center" spacing="lg">
               <Title order={2} style={{ color: '#ff922b', fontWeight: 700 }}>
-                No Habits Yet
+                {authToken ? 'No Habits Found' : 'Authentication Required'}
               </Title>
               <Text size="lg" color="#666" ta="center" maw={400}>
-                Create some habits in the Habits Management section to start tracking them interactively!
+                {authToken 
+                  ? 'Create some habits in the Habits Management section to start tracking them interactively!'
+                  : 'Please log in to view and track your habits.'
+                }
               </Text>
+              
+              {authToken && (
+                <Button
+                  variant="filled"
+                  color="orange"
+                  onClick={refreshHabits}
+                  leftSection={<IconRefresh size={16} />}
+                >
+                  Refresh Habits
+                </Button>
+              )}
             </Stack>
           </Center>
         ) : (
@@ -419,13 +481,11 @@ const InteractiveHabits = () => {
                             const startOfCalendar = dayjs(startOfMonth).startOf('week');
                             const endOfCalendar = dayjs(endOfMonth).endOf('week');
                             
-                            // Calculate total weeks and days
                             const totalDays = endOfCalendar.diff(startOfCalendar, 'day') + 1;
                             
-                            // Generate calendar grid
+                            let currentDate = startOfCalendar;
                             for (let i = 0; i < totalDays; i++) {
-                              // Calculate the date for this grid position
-                              const dateObj = dayjs(startOfCalendar).add(i, 'day');
+                              const dateObj = dayjs(currentDate);
                               const isCurrentMonth = dateObj.isSame(selectedMonth, 'month');
                               const isToday = dateObj.isSame(dayjs(), 'day');
                               const dateStr = dateObj.format('YYYY-MM-DD');
@@ -479,12 +539,6 @@ const InteractiveHabits = () => {
                                     }}
                                     onClick={() => {
                                       if (isClickable) {
-                                        console.log('Clicking date:', {
-                                          date: dateObj.format('YYYY-MM-DD'),
-                                          isCurrentMonth,
-                                          isToday,
-                                          isFutureDate
-                                        });
                                         handleDateToggle(selectedHabit, dateObj);
                                       }
                                     }}
@@ -518,6 +572,7 @@ const InteractiveHabits = () => {
                                   </Box>
                                 </Tooltip>
                               );
+                              
                               currentDate = currentDate.add(1, 'day');
                             }
                             return days;

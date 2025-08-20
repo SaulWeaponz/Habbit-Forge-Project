@@ -37,13 +37,14 @@ import dayjs from 'dayjs';
 import useGoalsStorge from './goals/utils/goalStrapi';
 import useStrapiHabits from './habits/useLocalStorage';
 import { useNavigate } from 'react-router-dom';
+import { getAuthToken } from '../../utils/auth';
 
 const GoalTracking = () => {
   const [selectedGoal, setSelectedGoal] = useState(null);
   const navigate = useNavigate();
-  const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
-  const { goals, loading: goalsLoading } = useGoalsStorge(STRAPI_AUTH_TOKEN);
-  const { list: habits = [], loading: habitsLoading } = useStrapiHabits(STRAPI_AUTH_TOKEN);
+  const AUTH_TOKEN = getAuthToken() || import.meta.env.VITE_STRAPI_AUTH_TOKEN;
+  const { goals, loading: goalsLoading } = useGoalsStorge(AUTH_TOKEN);
+  const { list: habits = [], loading: habitsLoading } = useStrapiHabits(AUTH_TOKEN);
 
   const today = dayjs();
 
@@ -59,12 +60,14 @@ const GoalTracking = () => {
 
   // Helper to get associated habit objects from Strapi's nested relation format
   const getAssociatedHabitObjects = (goal) => {
-    if (!goal.associatedHabits) return [];
-    if (Array.isArray(goal.associatedHabits)) {
-      return goal.associatedHabits;
+    // Support both raw Strapi relation shapes and arrays
+    const assoc = goal?.associatedHabits ?? goal?.attributes?.associatedHabits;
+    if (!assoc) return [];
+    if (Array.isArray(assoc)) {
+      return assoc.map((h) => (h?.attributes ? { id: h.id, ...h.attributes } : h));
     }
-    if (goal.associatedHabits.data && Array.isArray(goal.associatedHabits.data)) {
-      return goal.associatedHabits.data;
+    if (assoc?.data && Array.isArray(assoc.data)) {
+      return assoc.data.map((h) => (h?.attributes ? { id: h.id, ...h.attributes } : h));
     }
     return [];
   };
@@ -72,9 +75,11 @@ const GoalTracking = () => {
   // Helper: Calculate progress for a habit (by id or object)
   const calculateHabitProgress = (habit) => {
     if (!habit) return 0;
-    if (!habit.completedDates || !habit.startDate || !habit.endDate) return 0;
-    const totalDays = dayjs(habit.endDate).diff(dayjs(habit.startDate), 'day') + 1;
-    return Math.round((habit.completedDates.length / totalDays) * 100);
+    const h = habit.attributes ? { ...habit.attributes, id: habit.id } : habit;
+    if (!h.completedDates || !h.startDate || !h.endDate) return 0;
+    const totalDays = dayjs(h.endDate).diff(dayjs(h.startDate), 'day') + 1;
+    if (totalDays <= 0) return 0;
+    return Math.round(((h.completedDates?.length || 0) / totalDays) * 100);
   };
 
   // Helper: Calculate goal progress based on associated habits
@@ -177,8 +182,8 @@ const GoalTracking = () => {
               >
                 <Group justify="space-between">
                   <Box>
-                    <Text fw={700} size="lg" style={{ color: '#222' }}>{goal.title}</Text>
-                    <Text size="sm" color="#666">{goal.description}</Text>
+                    <Text fw={700} size="lg" style={{ color: '#222' }}>{goal.title || goal.attributes?.title}</Text>
+                    <Text size="sm" color="#666">{goal.description || goal.attributes?.description}</Text>
                   </Box>
                   <Badge color="orange" variant="light">{progress}%</Badge>
                 </Group>

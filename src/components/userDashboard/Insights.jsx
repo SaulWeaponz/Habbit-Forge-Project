@@ -18,6 +18,7 @@ import {
   Alert,
   Center,
   Card,
+  Loader,
 } from '@mantine/core';
 import {
   IconBrain,
@@ -38,20 +39,28 @@ import dayjs from 'dayjs';
 import useStrapiHabits from './habits/useLocalStorage';
 import useGoalsStorge from './goals/utils/goalStrapi';
 import gamificationService from './habits/utils/GamificationService';
+import { getAuthToken } from '../../utils/auth';
 
 const Insights = () => {
   const [showDetailedInsights, setShowDetailedInsights] = useState(false);
   const [selectedInsight, setSelectedInsight] = useState(null);
-  const STRAPI_AUTH_TOKEN = import.meta.env.VITE_STRAPI_AUTH_TOKEN;
-  const { list: habits = [], loading: habitsLoading } = useStrapiHabits(STRAPI_AUTH_TOKEN);
-  const { goals, loading: goalsLoading } = useGoalsStorge(STRAPI_AUTH_TOKEN);
+  const AUTH_TOKEN = getAuthToken() || import.meta.env.VITE_STRAPI_AUTH_TOKEN;
+  const { list: habits = [], loading: habitsLoading } = useStrapiHabits(AUTH_TOKEN);
+  const { goals, loading: goalsLoading } = useGoalsStorge(AUTH_TOKEN);
 
-  if (habitsLoading || goalsLoading) {
-    // Show loader
-  }
+  const isLoading = habitsLoading || goalsLoading;
 
   const insights = useMemo(() => {
     if (!habits || habits.length === 0) return null;
+
+    const safeTotalDays = (start, end) => {
+      if (!start || !end) return 0;
+      const s = dayjs(start);
+      const e = dayjs(end);
+      if (!s.isValid() || !e.isValid()) return 0;
+      const d = e.diff(s, 'day') + 1;
+      return d > 0 ? d : 0;
+    };
 
     // Calculate habit health score
     const calculateHabitHealth = () => {
@@ -62,12 +71,13 @@ const Insights = () => {
       }).length;
       
       const completionRates = habits.map(habit => {
-        const totalDays = dayjs(habit.endDate).diff(dayjs(habit.startDate), 'day') + 1;
+        const totalDays = safeTotalDays(habit.startDate, habit.endDate);
         const completedDays = habit.completedDates?.length || 0;
-        return (completedDays / totalDays) * 100;
+        return totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
       });
       
-      const avgCompletionRate = completionRates.reduce((sum, rate) => sum + rate, 0) / completionRates.length;
+      const validRates = completionRates.filter((r) => Number.isFinite(r));
+      const avgCompletionRate = validRates.length ? validRates.reduce((sum, rate) => sum + rate, 0) / validRates.length : 0;
       const consistencyScore = Math.min(100, avgCompletionRate * 1.2);
       
       return Math.round((activeHabits / totalHabits * 40) + (consistencyScore * 0.6));
@@ -114,9 +124,9 @@ const Insights = () => {
     // Identify strengths and weaknesses
     const identifyStrengthsWeaknesses = () => {
       const habitAnalysis = habits.map(habit => {
-        const totalDays = dayjs(habit.endDate).diff(dayjs(habit.startDate), 'day') + 1;
+        const totalDays = safeTotalDays(habit.startDate, habit.endDate);
         const completedDays = habit.completedDates?.length || 0;
-        const completionRate = (completedDays / totalDays) * 100;
+        const completionRate = totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
         
         // Calculate streak
         let maxStreak = 0;
@@ -173,11 +183,15 @@ const Insights = () => {
         });
       }
       
-      const avgCompletionRate = habits.reduce((sum, h) => {
-        const totalDays = dayjs(h.endDate).diff(dayjs(h.startDate), 'day') + 1;
-        const completedDays = h.completedDates?.length || 0;
-        return sum + ((completedDays / totalDays) * 100);
-      }, 0) / habits.length;
+      let avgCompletionRate = 0;
+      if (habits.length) {
+        const rates = habits.map(h => {
+          const totalDays = safeTotalDays(h.startDate, h.endDate);
+          const completedDays = h.completedDates?.length || 0;
+          return totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
+        }).filter((r) => Number.isFinite(r));
+        avgCompletionRate = rates.length ? rates.reduce((sum, r) => sum + r, 0) / rates.length : 0;
+      }
       
       if (avgCompletionRate < 50) {
         recommendations.push({
@@ -207,11 +221,26 @@ const Insights = () => {
       summary: {
         totalHabits: habits.length,
         activeHabits: habits.filter(h => dayjs(h.endDate).isAfter(dayjs())).length,
-        avgCompletionRate: Math.round(all.reduce((sum, h) => sum + h.completionRate, 0) / all.length),
+        avgCompletionRate: all.length ? Math.round(all.reduce((sum, h) => sum + h.completionRate, 0) / all.length) : 0,
         bestStreak: Math.max(...all.map(h => h.maxStreak)),
       }
     };
   }, [habits, goals]);
+
+  if (isLoading) {
+    return (
+      <Container size="lg">
+        <Center style={{ height: '50vh' }}>
+          <Stack align="center" spacing="md">
+            <Loader size="lg" color="orange" />
+            <Text size="lg" style={{ color: '#ff922b', fontWeight: 600 }}>
+              Loading insights...
+            </Text>
+          </Stack>
+        </Center>
+      </Container>
+    );
+  }
 
   const getHealthColor = (score) => {
     if (score >= 80) return 'green';

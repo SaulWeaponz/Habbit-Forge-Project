@@ -29,6 +29,8 @@ import GoalAnalytics from './utils/GoalAnalytics';
 import useStrapiHabits from '../habits/useLocalStorage';
 import dayjs from 'dayjs';
 import { getAuthToken } from '../../../utils/auth';
+import { API_ENDPOINTS } from '../../../config/strapi';
+import { useEffect } from 'react';
 
 
 const GoalsManagement = () => {
@@ -51,8 +53,69 @@ const GoalsManagement = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [viewGoal, setViewGoal] = useState(null);
+  const [habits, setHabits] = useState([]);
+  const [habitsLoading, setHabitsLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(true);
   const STRAPI_AUTH_TOKEN = getAuthToken();
-  const { list: habitsList } = useStrapiHabits(STRAPI_AUTH_TOKEN);
+
+  // Prefetch habits on mount
+  useEffect(() => {
+    async function fetchHabits() {
+      setHabitsLoading(true);
+      try {
+        const res = await fetch(API_ENDPOINTS.HABITS, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(STRAPI_AUTH_TOKEN ? { Authorization: `Bearer ${STRAPI_AUTH_TOKEN}` } : {}),
+          },
+        });
+        const data = await res.json();
+        if (data && data.data) {
+          setHabits(
+            data.data.map(item => {
+              const attributes = item.attributes || item;
+              return {
+                id: item.id,
+                documentId: item.id.toString(),
+                title: attributes.title || 'Untitled',
+                ...attributes,
+              };
+            })
+          );
+        } else {
+          setHabits([]);
+        }
+      } catch (e) {
+        setHabits([]);
+      } finally {
+        setHabitsLoading(false);
+      }
+    }
+    fetchHabits();
+  }, [STRAPI_AUTH_TOKEN]);
+
+  // Prefetch users on mount
+  useEffect(() => {
+    async function fetchUsers() {
+      setUsersLoading(true);
+      try {
+        const res = await fetch(API_ENDPOINTS.USERS, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(STRAPI_AUTH_TOKEN ? { Authorization: `Bearer ${STRAPI_AUTH_TOKEN}` } : {}),
+          },
+        });
+        const data = await res.json();
+        setUsers(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setUsers([]);
+      } finally {
+        setUsersLoading(false);
+      }
+    }
+    fetchUsers();
+  }, [STRAPI_AUTH_TOKEN]);
 
   if (loading) {
     return (
@@ -135,6 +198,10 @@ const GoalsManagement = () => {
             setEditingGoal(null);
           }}
           initialValues={editingGoal}
+          habits={habits}
+          habitsLoading={habitsLoading}
+          users={users}
+          usersLoading={usersLoading}
         />
 
         <Stack spacing="lg">
@@ -160,7 +227,7 @@ const GoalsManagement = () => {
               {(Array.isArray(goals.data) ? goals.data : []).map((goal) => {
                 // Map associated habit IDs to titles
                 const associatedHabitTitles = (goal.associatedHabits || []).map(hid => {
-                  const found = habitsList.find(h => h.documentId === String(hid) || h.id === hid);
+                  const found = habits.find(h => h.documentId === String(hid) || h.id === hid);
                   return found ? found.title : hid;
                 });
                 return (
@@ -270,7 +337,7 @@ const GoalsManagement = () => {
                       if (typeof h === 'object' && h !== null) {
                         return h.title || h.id;
                       }
-                      const found = habitsList.find(habit => habit.documentId === String(h) || habit.id === h);
+                      const found = habits.find(habit => habit.documentId === String(h) || habit.id === h);
                       return found ? found.title : h;
                     }).join(', ')
                   }
