@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import "./LoginPage.css";
 import { API_ENDPOINTS } from '../config/strapi';
+import { saveUserToStorage } from '../utils/localStorage';
 
 // Use centralized configuration
 const STRAPI_URL = API_ENDPOINTS.AUTH.replace('/api/auth', '/api');
@@ -91,8 +92,10 @@ export default function SignupPage() {
         headers: { Authorization: `Bearer ${jwt}` }
       });
 
-      localStorage.setItem("authToken", jwt);
-      localStorage.setItem("user", JSON.stringify(userWithRole.data));
+      // Persist auth using the same keys as the login flow
+      saveUserToStorage(userWithRole.data, jwt);
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("authMethod", "strapi");
 
       notifications.show({
         title: "Success",
