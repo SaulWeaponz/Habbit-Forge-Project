@@ -48,7 +48,8 @@ export default function LoginPage() {
         const user = response.data.user;
         // Fetch the full user with role
         const userWithRoleRes = await axios.get(
-          `${API_ENDPOINTS.USERS}/${user.id}?populate=role`
+          `${API_ENDPOINTS.USERS_ME}?populate=role`,
+          { headers: { Authorization: `Bearer ${response.data.jwt}` } }
         );
         const userWithRole = userWithRoleRes.data;
         saveUserToStorage({
